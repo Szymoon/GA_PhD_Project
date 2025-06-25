@@ -6,12 +6,12 @@ import matplotlib.animation as animation
 # --- GA Hyperparameters ---
 # These hyperparameters can be adjusted to optimize the performance of the genetic algorithm.
 POPULATION_SIZE = 100
-GENERATIONS = 50
+GENERATIONS = 20
 MUTATION_RATE = 0.01
 MUTATTION_STRENGHT = 0.1
 TOURNAMENT_SIZE = 5
 
-PLOT_DELAY = 50  # Delay in milliseconds for animation
+PLOT_DELAY = 1000  # Delay in milliseconds for animation
 
 # --- Benchamark Functions ---
 def ackley(solution):
@@ -151,6 +151,9 @@ if __name__ == "__main__":
     ax1.set_ylabel('Y coordinate')
     ax1.set_zlabel('Fitness Value')
     ax1.set_title(f'Fitness Landscape for {benchmark_function.__name__}')
+    
+    # Set the initial view angle for better visualization
+    ax1.view_init(elev=90, azim=0)  # elv=90, azim=0 gives a top-down view
     
     # Placeholder for the animation
     scatter_3d = ax1.scatter([], [], [], color='red', label='Population', s=25, depthshade=True)

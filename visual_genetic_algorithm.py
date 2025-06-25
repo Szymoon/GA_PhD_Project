@@ -1,8 +1,7 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
+
 # --- GA Hyperparameters ---
 # These hyperparameters can be adjusted to optimize the performance of the genetic algorithm.
 POPULATION_SIZE = 100
@@ -140,8 +139,8 @@ if __name__ == "__main__":
     ax2 = fig.add_subplot(122)  # 2D plot for the convergence
     
     # Prepare the 3D surface plot 
-    x_range = np.linspace(bounds[0], bounds[1], 100)
-    y_range = np.linspace(bounds[0], bounds[1], 100)
+    x_range = np.linspace(bounds[0], bounds[1], 400)
+    y_range = np.linspace(bounds[0], bounds[1], 400)
     X, Y = np.meshgrid(x_range, y_range)
     #Vectorized Z value (fitness) for each (x, y) pair
     Z = np.vectorize(lambda x, y: benchmark_function(np.array([x, y])))(X, Y)
@@ -153,7 +152,7 @@ if __name__ == "__main__":
     ax1.set_title(f'Fitness Landscape for {benchmark_function.__name__}')
     
     # Set the initial view angle for better visualization
-    ax1.view_init(elev=90, azim=0)  # elv=90, azim=0 gives a top-down view
+    ax1.view_init(elev=30, azim=60)  # elv=90, azim=0 gives a top-down view
     
     # Placeholder for the animation
     scatter_3d = ax1.scatter([], [], [], color='red', label='Population', s=25, depthshade=True)
@@ -173,6 +172,23 @@ if __name__ == "__main__":
         best_fitness = np.min(fitness_scores)
         best_fitness_history.append(best_fitness)
         
+        # Update the 3D plot with the current population
+        pop_x = current_population[:, 0]
+        pop_y = current_population[:, 1]
+        pop_z = calculate_fitness(current_population, benchmark_function)
+        scatter_3d._offsets3d = (pop_x, pop_y, pop_z)
+        
+        # Update the 2D convergence plot
+        line_2d[0].set_data(range(len(best_fitness_history)), best_fitness_history)
+        ax2.set_xlim(0, GENERATIONS)
+        
+        # Adjust ylim dynamically
+        if best_fitness_history:
+            ax2.set_ylim(min(best_fitness_history) * 0.9, max(best_fitness_history) + 1)
+        
+        # Update the title with the current generation and best fitness
+        fig.suptitle(f'GA Optimization - Generation {generation}/{GENERATIONS}, Best Fitness: {best_fitness:.4f}')
+            
         new_population = []
         for _ in range(POPULATION_SIZE):
             # Select parents
@@ -189,32 +205,15 @@ if __name__ == "__main__":
             new_population.append(mutated_offspring)
         
         # Update the current population with the new population
-        current_population = np.array(new_population)
-        
-        # --- Update plot for this frame ---
-        # Update the 3D plot with the current population
-        pop_x = current_population[:, 0]
-        pop_y = current_population[:, 1]
-        pop_z = calculate_fitness(current_population, benchmark_function)
-        scatter_3d._offsets3d = (pop_x, pop_y, pop_z)
-        
-        # Update the 2D convergence plot
-        line_2d[0].set_data(range(len(best_fitness_history)), best_fitness_history)
-        ax2.set_xlim(0, GENERATIONS)
-        # Adjust ylim dynamically
-        if best_fitness_history:
-            ax2.set_ylim(min(best_fitness_history) * 0.9, max(best_fitness_history) + 1)
-        
-        # Update the title with the current generation and best fitness
-        fig.suptitle(f'GA Optimization - Generation {generation + 1}/{GENERATIONS}, Best Fitness: {best_fitness:.4f}')
-        
+        current_population = np.array(new_population)                      
+           
         return scatter_3d, line_2d
     
     # --- RUN THE ANIMATION ---
     ani = animation.FuncAnimation(
         fig=fig, 
         func=update,
-        frames=GENERATIONS,
+        frames=GENERATIONS + 1,  # +1 to include the initial population
         interval=PLOT_DELAY,
         blit=False, # Blit is set to False to update the entire figure, more reliable
         repeat=False

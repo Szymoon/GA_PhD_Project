@@ -1,11 +1,10 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 # --- GA Hyperparameters ---
 # These hyperparameters can be adjusted to optimize the performance of the genetic algorithm.
 POPULATION_SIZE = 100
-GENERATIONS = 50
+GENERATIONS = 20
 MUTATION_RATE = 0.01
 MUTATTION_STRENGHT = 0.1
 TOURNAMENT_SIZE = 5

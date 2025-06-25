@@ -20,8 +20,8 @@ def ackley(solution):
     a = 20
     b = 0.2
     d = len(solution) # Number of dimensions
-    sum1 = -a*np.exp(-b * np.sqrt(np.sum(solution**2) / d))
-    sum2 = -np.exp(np.sqrt(np.sum(np.cos(2 * np.pi * solution)) / d))
+    sum1 = -a * np.exp(-b * np.sqrt(np.sum(solution**2) / d))
+    sum2 = -np.exp(np.sum(np.cos(2 * np.pi * solution)) / d)
     return sum1 + sum2 + a + np.exp(1)
 
 # --- Function Bounds ---
@@ -121,3 +121,93 @@ def mutate(individual, mutation_rate, mutation_strength, bounds):
     return mutated_individual
 
 # --- Main Genetic Algorithm Function ---
+
+if __name__ == "__main__":
+    # 1. --- SETUP ---
+    benchmark_function = ackley # Benchmark function to optimize
+    bounds = bounds[benchmark_function.__name__] # ensure proper benchmark function name
+    
+    best_fitness_history = [] # Store the best fitness value for each generation
+    
+    # 2. --- GENERATE DATA FOR PLOTTING ---
+    x_range = np.linspace(bounds[0], bounds[1], 200)
+    y_range = np.linspace(bounds[0], bounds[1], 200)
+    X, Y = np.meshgrid(x_range, y_range)
+    
+    # Z value (fitness) for each (x, y) pair 
+    Z = np.array([[benchmark_function(np.array([x, y])) for x in x_range] for y in y_range])
+        
+    # 3. --- INITIALIZE POPULATION ---
+    current_population  = initialize_population(POPULATION_SIZE, n_dimensions, bounds)
+    
+    print(f"---- Starting Genetic Algorithm Optimization for {benchmark_function.__name__} ---")
+    
+    # 4. --- PLOT INITIAL POPULATION ---
+    plt.figure(figsize=(10, 6))
+    plt.contourf(X, Y, Z, levels=50, cmap='viridis')
+    plt.colorbar(label='Fitness Value')
+    
+    pop_x = current_population[:, 0]
+    pop_y = current_population[:, 1]
+    plt.scatter(pop_x, pop_y, color='red', label='First Generation')
+    
+    plt.title(f'Initial Population for {benchmark_function.__name__}')
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.legend()
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.show(block=False)
+    
+    # 5. --- MAIN LOOP ---
+    for generation in range(GENERATIONS):
+        # Calculate fitness for current population
+        fitness_scores = calculate_fitness(current_population, benchmark_function)
+        
+        # Store the best fitness value for this generation
+        best_fitness = np.min(fitness_scores)
+        best_fitness_history.append(best_fitness)
+        
+        # Print progress
+        if (generation + 1) % 10 == 0 or generation == 0:
+            print(f"Generation {generation + 1}/{GENERATIONS}, Best Fitness: {best_fitness:.4f}")
+        
+        # Create a new population
+        new_population = []
+        for _ in range(POPULATION_SIZE):
+            # Select parents
+            parent1 = tournament_selection(current_population, fitness_scores, TOURNAMENT_SIZE)
+            parent2 = tournament_selection(current_population, fitness_scores, TOURNAMENT_SIZE)
+            
+            # Crossover to create offspring
+            offspring = crossover(parent1, parent2)
+            
+            # Mutate the offspring
+            mutated_offspring = mutate(offspring, MUTATION_RATE, MUTATTION_STRENGHT , bounds)
+            
+            # Add the mutated offspring to the new population
+            new_population.append(mutated_offspring)
+        
+        # Update the current population with the new population
+        current_population = np.array(new_population)
+        
+    # 6. --- RESULTS AND VISUALIZATION ---
+    print(f"---- Genetic Algorithm Optimization Completed ----")
+    
+    # Final fitness scores
+    final_fitness_scores = calculate_fitness(current_population, benchmark_function)
+    best_solution_index = np.argmin(final_fitness_scores)
+    best_solution = current_population[best_solution_index]
+    best_fitness = final_fitness_scores[best_solution_index]
+    
+    print(f"Best Solution: {best_solution}")
+    print(f"Best Fitness: {best_fitness:.4f}")
+    
+    # Plotting the convergence curve
+    plt.figure(figsize=(10, 5))
+    plt.plot(range(GENERATIONS), best_fitness_history, marker='o', linestyle='-', color='r')
+    plt.title('Convergence Curve')
+    plt.xlabel('Generation')
+    plt.ylabel('Best Fitness Value')
+    plt.grid()
+    plt.show()
+    
